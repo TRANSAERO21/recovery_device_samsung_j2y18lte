@@ -10,5 +10,6 @@ $(INSTALLED_DTIMAGE_TARGET): $(CUSTOM_DTB_TOOL) $(KERNEL_OUT)
 $(INSTALLED_RECOVERYIMAGE_TARGET): $(recovery_ramdisk) $(MKBOOTIMG) $(recovery_kernel) $(INSTALLED_DTIMAGE_TARGET)
 	@echo ----- Making recovery image ------
 	$(hide) $(MKBOOTIMG) $(INTERNAL_RECOVERYIMAGE_ARGS) $(INTERNAL_MKBOOTIMG_VERSION_ARGS) $(BOARD_MKBOOTIMG_ARGS) --dt $(INSTALLED_DTIMAGE_TARGET) --output $@ --id > $(RECOVERYIMAGE_ID_FILE)
+	$(hide) echo -n "SEANDROIDENFORCE" >> $@
 	$(hide) $(call assert-max-image-size,$(1),$(BOARD_RECOVERYIMAGE_PARTITION_SIZE))
 	@echo ----- Made recovery image: $@ --------
