@@ -1,0 +1,87 @@
+on init
+## tz debugging
+	mkdir /d
+	mount debugfs debugfs /d
+
+#to cut charging battery path
+    write /sys/class/power_supply/battery/siop_level 0
+
+on fs
+    chown system system /sys/class/leds/lcd-backlight/brightness
+    chmod 0666 /sys/class/leds/lcd-backlight/brightness
+    write /sys/class/leds/lcd-backlight/brightness 120
+    chmod 0000 /sys/class/leds/lcd-backlight/brightness
+
+service kap_enable /sbin/knox_changer -e
+    seclabel u:r:kapd:s0
+    class main
+    disabled
+    oneshot
+
+service kap_disable /sbin/knox_changer -d
+    seclabel u:r:kapd:s0
+    class main
+    disabled
+    oneshot
+
+service afw_enable /sbin/knox_changer -f
+    seclabel u:r:kapd:s0
+    class main
+    disabled
+    oneshot
+
+service afw_disable /sbin/knox_changer -s
+    seclabel u:r:kapd:s0
+    class main
+    disabled
+    oneshot
+
+# UCS
+service ucs_enable /sbin/knox_changer -u
+    class main
+    seclabel u:r:kapd:s0
+    disabled
+    oneshot
+
+service ucs_disable /sbin/knox_changer -v
+    class main
+    seclabel u:r:kapd:s0
+    disabled
+    oneshot
+
+service ucs_reset /sbin/knox_changer -w
+    class main
+    seclabel u:r:kapd:s0
+    disabled
+    oneshot
+
+on property:security.knox_ucs_mode=true
+    start ucs_enable
+on property:security.knox_ucs_mode=false
+    start ucs_disable
+on property:security.knox_ucs_mode=reset
+    start ucs_reset
+
+#DMV
+##qseecomfs daemon - Qualcomm case 
+service static_qsee /sbin/qseecomfsd
+    seclabel u:r:qseecomd:s0
+    class load_dmv
+
+on property:security.dmv=start
+   class_start load_dmv
+
+on property:security.dmv=stop
+   class_reset load_dmv
+
+# Allow the Knox Active Protection mode to be set from recovery
+on property:security.knox_kap_mode=true
+    start kap_enable
+on property:security.knox_kap_mode=false
+    start kap_disable
+
+# Allow the AFW mode to be set from recovery
+on property:security.knox_afw_mode=true
+    start afw_enable
+on property:security.knox_afw_mode=false
+    start afw_disable
